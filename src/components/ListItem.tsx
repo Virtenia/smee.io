@@ -49,8 +49,10 @@ function formatDistance (time: number) {
 export default class ListItem extends Component<
 {
   item: {
-    'x-github-event': string,
-    body: { action: string, [key: string]: unknown },
+    'x-github-event'?: string,
+    'x-github-delivery'?: string,
+    'content-type'?: string,
+    body: any,
     timestamp: number
   },
   now: number,
@@ -73,8 +75,7 @@ export default class ListItem extends Component<
 
   handleCopy () {
     const { item } = this.props
-    const event = { event: item['x-github-event'], payload: item.body }
-    const copied = copy(JSON.stringify(event))
+    const copied = copy(JSON.stringify(item.body, null, 2))
     this.setState({ copied })
   }
 
@@ -94,7 +95,7 @@ export default class ListItem extends Component<
     const { expanded, copied, redelivered } = this.state
     const { now, item, last, pinned, togglePinned } = this.props
 
-    const event = item['x-github-event']
+    const event = item['x-github-event'] || item['content-type'] || 'webhook'
     const payload = item.body
     const id = item['x-github-delivery'] || item.timestamp
 
@@ -145,7 +146,7 @@ export default class ListItem extends Component<
               <h5 className='mb-2'>Payload</h5>
               <ReactJson
                 src={payload}
-                name={id}
+                name={String(id)}
                 collapsed={1}
                 displayObjectSize={false}
                 displayDataTypes={false}

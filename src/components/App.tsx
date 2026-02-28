@@ -78,9 +78,17 @@ export default class App extends Component<{}, AppState> {
     console.log('received message!')
     const json = JSON.parse(message.data)
 
+    // Decode base64-encoded body
+    const decoded = atob(json.body)
+    try {
+      json.body = JSON.parse(decoded)
+    } catch (e) {
+      json.body = decoded
+    }
+
     // Prevent duplicates in the case of redelivered payloads
-    const idProp = 'x-github-delivery'
-    if (json[idProp] === undefined || this.state.log.findIndex(l => l[idProp] === json[idProp]) === -1) {
+    const eventId = json['x-github-delivery'] || json.timestamp
+    if (!json['x-github-delivery'] || this.state.log.findIndex(l => (l['x-github-delivery'] || l.timestamp) === eventId) === -1) {
       this.setState({
         log: [json, ...this.state.log]
       }, () => {
@@ -118,9 +126,12 @@ export default class App extends Component<{}, AppState> {
     localStorage.setItem(this.pinnedRef, JSON.stringify(pinnedDeliveries))
   }
 
+  getEventId (item) {
+    return item['x-github-delivery'] || item.timestamp
+  }
+
   isPinned (item) {
-    const id = item['x-github-delivery'] || item.timestamp
-    return this.state.pinnedDeliveries.includes(id)
+    return this.state.pinnedDeliveries.includes(this.getEventId(item))
   }
 
   render () {
@@ -143,12 +154,12 @@ export default class App extends Component<{}, AppState> {
     const stateString = this.state.connection ? 'Connected' : 'Not Connected'
 
     const pinnedLogs = filtered.filter(this.isPinned).map((item, i, arr) => {
-      const id = item['x-github-delivery'] || item.timestamp
+      const id = this.getEventId(item)
       return <ListItem now={now} key={id} pinned togglePinned={this.togglePinned} item={item} last={i === arr.length - 1} />
     })
 
     const allLogs = filtered.filter(item => !this.isPinned(item)).map((item, i, arr) => {
-      const id = item['x-github-delivery'] || item.timestamp
+      const id = this.getEventId(item)
       return <ListItem now={now} key={id} pinned={false} togglePinned={this.togglePinned} item={item} last={i === arr.length - 1} />
     })
 
