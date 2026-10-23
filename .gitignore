@@ -2,3 +2,5 @@ node_modules
 coverage
 public/*.min.*
 .env
+test-results/
+playwright-report/

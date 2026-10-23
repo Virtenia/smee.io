@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - virtenia-fork
 
 jobs:
   tests:
@@ -12,11 +13,6 @@ jobs:
     strategy:
       matrix:
         node-version: [24.x]
-    services:
-      redis:
-        image: redis
-        ports:
-          - 6379:6379
     steps:
       - uses: actions/checkout@v5
       - name: Use Node.js ${{ matrix.node-version }}
@@ -25,7 +21,9 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm test
 
   docker:
     runs-on: ubuntu-latest

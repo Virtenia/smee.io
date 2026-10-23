@@ -44,6 +44,10 @@ If you need to run multiple instances of the web app, you need a way to share ev
 
 For that reason, Smee.io has built-in support for Redis as a message bus. To enable it, just set a `REDIS_URL` environment variable. That will tell the app to use Redis when receiving payloads, and to publish them from each instance of the app.
 
+## Development
+
+For local setup and the server/browser test commands, see [tests/README.md](tests/README.md).
+
 ## FAQ
 
 **How long do channels live for?**
