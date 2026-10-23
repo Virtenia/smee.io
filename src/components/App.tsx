@@ -178,40 +178,40 @@ export default class App extends Component<{}, AppState> {
 
         {log.length > 0
           ? (
-            <div className='container-lg py-3 p-responsive'>
-              <div className='mb-2'>
-                <div className='d-flex flex-items-end mb-2'>
-                  <label htmlFor='search' className='d-flex flex-items-center f6 text-gray'><SearchIcon size={12} className='mr-1' /> Filter by</label>
-                  <a className='f6' href='https://github.com/jonschlinkert/get-value' target='_blank' rel='noopener noreferrer'>get-value syntax</a>
+              <div className='container-lg py-3 p-responsive'>
+                <div className='mb-2'>
+                  <div className='d-flex flex-items-end mb-2'>
+                    <label htmlFor='search' className='d-flex flex-items-center f6 text-gray'><SearchIcon size={12} className='mr-1' /> Filter by</label>
+                    <a className='f6' href='https://github.com/jonschlinkert/get-value' target='_blank' rel='noopener noreferrer'>get-value syntax</a>
 
-                  <button onClick={this.handleClear} className='btn btn-sm btn-danger' style={{ marginLeft: 'auto' }}>Clear deliveries</button>
+                    <button onClick={this.handleClear} className='btn btn-sm btn-danger' style={{ marginLeft: 'auto' }}>Clear deliveries</button>
+                  </div>
+                  <input
+                    type='text'
+                    id='search'
+                    placeholder='repository.name:probot'
+                    value={filter}
+                    onChange={e => this.setState({ filter: e.target.value })}
+                    className='input input-lg width-full Box p-2'
+                  />
                 </div>
-                <input
-                  type='text'
-                  id='search'
-                  placeholder='repository.name:probot'
-                  value={filter}
-                  onChange={e => this.setState({ filter: e.target.value })}
-                  className='input input-lg width-full Box p-2'
-                />
+                {pinnedDeliveries.length > 0 && (
+                  <>
+                    <h6 className='d-flex flex-items-center text-gray mb-1'><PinIcon size={12} className='mr-1' /> Pinned</h6>
+                    <ul className='Box list-style-none pl-0 mb-2'>
+                      {pinnedLogs}
+                    </ul>
+                  </>
+                )}
+                <h6 className='d-flex flex-items-center text-gray mb-1'>All</h6>
+                {allLogs.length === 0
+                  ? <div className='Box p-3 note text-center'>All logs are pinned</div>
+                  : (
+                      <ul className='Box list-style-none pl-0'>
+                        {allLogs}
+                      </ul>
+                    )}
               </div>
-              {pinnedDeliveries.length > 0 && (
-                <>
-                  <h6 className='d-flex flex-items-center text-gray mb-1'><PinIcon size={12} className='mr-1' /> Pinned</h6>
-                  <ul className='Box list-style-none pl-0 mb-2'>
-                    {pinnedLogs}
-                  </ul>
-                </>
-              )}
-              <h6 className='d-flex flex-items-center text-gray mb-1'>All</h6>
-              {allLogs.length === 0
-                ? <div className='Box p-3 note text-center'>All logs are pinned</div>
-                : (
-                  <ul className='Box list-style-none pl-0'>
-                    {allLogs}
-                  </ul>
-                  )}
-            </div>
             )
           : <Blank />}
       </main>
