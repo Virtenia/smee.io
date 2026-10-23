@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`<CodeExample /> render renders the expected HTML 1`] = `
-"const SmeeClient = require('smee-client')
+"import SmeeClient from 'smee-client'
 
 const smee = new SmeeClient({
   source: 'https://smee.io/CHANNEL',
@@ -9,7 +9,7 @@ const smee = new SmeeClient({
   logger: console
 })
 
-const events = smee.start()
+const events = await smee.start()
 
 // Stop forwarding events
 events.close()"

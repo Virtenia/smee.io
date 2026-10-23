@@ -73,9 +73,9 @@ export default class ListItem extends Component<
     this.state = { expanded: false, copied: false, redelivered: false }
   }
 
-  handleCopy () {
+  async handleCopy () {
     const { item } = this.props
-    const copied = copy(JSON.stringify(item.body, null, 2))
+    const copied = await copy(JSON.stringify(item.body, null, 2))
     this.setState({ copied })
   }
 

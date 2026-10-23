@@ -1,6 +1,6 @@
 import React from 'react'
 
-const code = `<span class="hljs-keyword">const</span> SmeeClient = <span class="hljs-built_in">require</span>(<span class="hljs-string">'smee-client'</span>)
+const code = `<span class="hljs-keyword">import</span> SmeeClient <span class="hljs-keyword">from</span> <span class="hljs-string">'smee-client'</span>
 
 <span class="hljs-keyword">const</span> smee = <span class="hljs-keyword">new</span> SmeeClient({
 <span class="hljs-attr">  source</span>: <span class="hljs-string">'${window.location.href}'</span>,
@@ -8,7 +8,7 @@ const code = `<span class="hljs-keyword">const</span> SmeeClient = <span class="
 <span class="hljs-attr">  logger</span>: <span class="hljs-built_in">console</span>
 })
 
-<span class="hljs-keyword">const</span> events = smee.start()
+<span class="hljs-keyword">const</span> events = <span class="hljs-keyword">await</span> smee.start()
 
 <span class="hljs-comment">// Stop forwarding events</span>
 events.close()`

@@ -1,6 +1,7 @@
 import neostandard from 'neostandard'
 
 export default [
+  { ignores: ['public/**', 'coverage/**', '.context/**'] },
   ...neostandard({
     env: ['browser', 'es2022'],
     ts: true,
@@ -14,5 +15,17 @@ export default [
       'node_modules',
       'public',
     ]
-  })
+  }),
+  {
+    files: ['tests/**/*.jsx'],
+    // neostandard omits react/jsx-uses-react while supporting ESLint 10.
+    rules: {
+      'no-unused-vars': ['error', {
+        args: 'none',
+        caughtErrors: 'none',
+        ignoreRestSiblings: true,
+        varsIgnorePattern: '^React$'
+      }]
+    }
+  }
 ]
