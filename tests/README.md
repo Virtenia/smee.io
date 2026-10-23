@@ -45,20 +45,11 @@ The suite replaces Enzyme snapshots, direct component state manipulation,
 console-log assertions, and tests of third-party library details. CI runs lint
 and the complete suite for PRs and pushes to `virtenia-fork` and `master`.
 
-## Known application bug
-
-The redelivery browser test runs as an **expected failure**. The UI currently
-POSTs the entire decoded delivery envelope, and the server forwards that envelope
-as the new body, with the browser's content type. The test requires the original
-payload and content type. Setup, request delivery, and the success indicator
-must still work before the expected-failure annotation is reached.
-
-This is an existing product defect, not a skipped test or an assertion adjusted
-to accept broken behavior. Fixing it should include deciding how to retain the
-original raw bytes in the UI, so replay does not re-serialize JSON or invalidate
-webhook signatures. Once fixed, Playwright reports an unexpected pass until the
-annotation is removed. That production behavior change is separate from this
-test renovation.
+Redelivery tests compare exact payload bytes, content type, custom headers,
+signature headers, and query parameters after a page reload. They cover formatted
+Unicode JSON, CloudEvents batches, plain text, and binary payloads. The UI keeps
+the original base64 body alongside its decoded display value. Older saved
+deliveries without those original bytes have redelivery disabled.
 
 Redis scenarios and their original snapshot are preserved in
 [`deferred/redis`](deferred/redis/README.md). They are intentionally excluded from

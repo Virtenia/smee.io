@@ -156,24 +156,60 @@ test('copies the payload only after success and does not claim success on failur
   await expect(copy).toBeVisible()
 })
 
-test('redelivers the original payload rather than wrapping the delivery envelope', async ({ page }) => {
+for (const [name, contentType, body] of [
+  ['formatted JSON', 'application/json', Buffer.from('{\r\n  "message": "café 😀", "value": 42\r\n}\r\n')],
+  ['CloudEvents batch', 'application/cloudevents-batch+json', Buffer.from('[\n { "specversion": "1.0", "data": { "value": 42 } }\n]\n')],
+  ['plain text', 'text/plain; charset=utf-8', Buffer.from('not JSON: café 😀\r\n')],
+  ['binary data', 'application/octet-stream', Buffer.from([0, 255, 128, 13, 10, 65])]
+]) {
+  test(`redelivers ${name} with original bytes and metadata after reload`, async ({ page }) => {
+    const channel = await openChannel(page)
+    const stream = await openStream(`${server.url}/${channel}`)
+    try {
+      const response = await page.request.post(`${server.url}/${channel}?source=example&attempt=2&tag=first&tag=second`, {
+        headers: {
+          'content-type': contentType,
+          'x-github-delivery': randomUUID(),
+          'x-github-event': 'issues',
+          'x-hub-signature-256': 'opaque-signature',
+          'x-custom-header': 'preserve this'
+        },
+        data: body
+      })
+      expect(response.status()).toBe(200)
+      const original = await stream.next()
+      await expect(cards(page)).toHaveCount(1)
+      await page.reload()
+      await expect(cards(page)).toHaveCount(1)
+      await cards(page).locator('button.ellipsis-expander').click()
+      const request = page.waitForRequest(request => new URL(request.url()).pathname.endsWith('/redeliver'))
+      await page.getByRole('button', { name: 'Redeliver this payload' }).click()
+      const sent = await request
+      const redelivered = await stream.next()
+      expect(sent.method()).toBe('POST')
+      await expect(page.getByRole('button', { name: 'Sent!', exact: true })).toBeVisible()
+      expect(Buffer.from(redelivered.body, 'base64')).toEqual(body)
+      expect(redelivered.bodyEncoding).toBe('base64')
+      expect(redelivered.query).toEqual(original.query)
+      for (const header of ['content-type', 'x-github-delivery', 'x-github-event', 'x-hub-signature-256', 'x-custom-header']) {
+        expect(redelivered[header]).toBe(original[header])
+      }
+    } finally {
+      stream.close()
+    }
+  })
+}
+
+test('does not offer redelivery for old saved entries without original bytes', async ({ page }) => {
   const channel = await openChannel(page)
-  const stream = await openStream(`${server.url}/${channel}`)
-  try {
-    const body = { action: 'opened', message: 'redeliver this payload' }
-    await deliver(page, channel, { body })
-    const original = await stream.next()
-    await cards(page).locator('button.ellipsis-expander').click()
-    const request = page.waitForRequest(request => request.url().endsWith('/redeliver'))
-    await page.getByRole('button', { name: 'Redeliver this payload' }).click()
-    const sent = await request
-    const redelivered = await stream.next()
-    expect(sent.method()).toBe('POST')
-    await expect(page.getByRole('button', { name: 'Sent!', exact: true })).toBeVisible()
-    test.fail(true, 'Existing UI bug: redelivery posts the whole event as the new payload; see tests/README.md.')
-    expect(Buffer.from(redelivered.body, 'base64')).toEqual(Buffer.from(original.body, 'base64'))
-    expect(redelivered['content-type']).toBe(original['content-type'])
-  } finally {
-    stream.close()
-  }
+  await deliver(page, channel)
+  await expect(cards(page)).toHaveCount(1)
+  await page.evaluate(key => {
+    const log = JSON.parse(localStorage.getItem(key))
+    delete log[0].rawBody
+    localStorage.setItem(key, JSON.stringify(log))
+  }, `smee:log:${channel}`)
+  await page.reload()
+  await cards(page).locator('button.ellipsis-expander').click()
+  await expect(page.getByRole('button', { name: 'Original payload unavailable for redelivery' })).toBeDisabled()
 })

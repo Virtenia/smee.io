@@ -53,6 +53,8 @@ export default class ListItem extends Component<
     'x-github-delivery'?: string,
     'content-type'?: string,
     body: any,
+    rawBody?: string,
+    query?: Record<string, string | string[]>,
     timestamp: number
   },
   now: number,
@@ -80,12 +82,24 @@ export default class ListItem extends Component<
   }
 
   handleRedeliver () {
-    return window.fetch(`${window.location.pathname}/redeliver`, {
-      method: 'POST',
-      body: JSON.stringify(this.props.item),
-      headers: {
-        'Content-Type': 'application/json'
+    const { item } = this.props
+    if (item.rawBody === undefined) return
+    const url = new URL(`${window.location.pathname}/redeliver`, window.location.origin)
+    for (const [name, values] of Object.entries(item.query || {})) {
+      for (const value of Array.isArray(values) ? values : [values]) url.searchParams.append(name, value)
+    }
+    // Omit envelope fields and transport headers supplied by the browser.
+    const headers = new Headers()
+    for (const [name, value] of Object.entries(item)) {
+      if (typeof value === 'string' && !['body', 'rawBody', 'bodyEncoding', 'host', 'connection', 'content-length', 'transfer-encoding'].includes(name)) {
+        headers.set(name, value)
       }
+    }
+    const body = Uint8Array.from(atob(item.rawBody), char => char.charCodeAt(0))
+    return window.fetch(url, {
+      method: 'POST',
+      body,
+      headers
     }).then(res => {
       this.setState({ redelivered: res.status === 200 })
     })
@@ -135,8 +149,9 @@ export default class ListItem extends Component<
                 <button
                   onBlur={() => this.setState({ redelivered: false })}
                   onClick={this.handleRedeliver}
+                  disabled={item.rawBody === undefined}
                   className='ml-2 btn btn-sm tooltipped tooltipped-s js-redeliver-btn'
-                  aria-label={redelivered ? 'Sent!' : 'Redeliver this payload'}
+                  aria-label={item.rawBody === undefined ? 'Original payload unavailable for redelivery' : redelivered ? 'Sent!' : 'Redeliver this payload'}
                 ><SyncIcon />
                 </button>
               </div>

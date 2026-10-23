@@ -78,7 +78,8 @@ export default class App extends Component<{}, AppState> {
     console.log('received message!')
     const json = JSON.parse(message.data)
 
-    // Decode base64-encoded body
+    // Retain original bytes for redelivery before decoding the display body.
+    json.rawBody = json.body
     const decoded = atob(json.body)
     try {
       json.body = JSON.parse(decoded)
