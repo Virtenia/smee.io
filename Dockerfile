@@ -6,6 +6,8 @@ WORKDIR /usr/src/smee.io
 COPY package*.json ./
 COPY webpack.config.js ./
 COPY src ./src
+# PurgeCSS needs the HTML pages when deciding which styles to retain.
+COPY public ./public
 RUN ls
 # Install the project's dependencies and build the bundles
 RUN npm ci

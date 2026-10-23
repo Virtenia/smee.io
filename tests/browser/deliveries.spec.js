@@ -27,6 +27,24 @@ async function deliver (page, channel, { body = { action: 'opened', repository: 
   expect(response.status()).toBe(200)
 }
 
+test('stacks the landing page title, description and action vertically', async ({ page }) => {
+  await page.goto(server.url)
+  const elements = [
+    page.getByRole('heading', { name: 'smee.io', exact: true }),
+    page.getByRole('heading', { name: 'Webhook payload delivery service', exact: true }),
+    page.getByText('Receives payloads then sends them to your locally running application.', { exact: true }),
+    page.getByRole('link', { name: 'Start a new channel', exact: true })
+  ]
+  let previousBottom = 0
+  for (const element of elements) {
+    await expect(element).toBeVisible()
+    const box = await element.boundingBox()
+    expect(box.y).toBeGreaterThanOrEqual(previousBottom)
+    previousBottom = box.y + box.height
+  }
+  await expect(page.locator('body > header')).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+})
+
 test('shows the channel URL, then decodes and displays an incoming delivery', async ({ page }) => {
   const channel = await openChannel(page)
   const input = page.getByRole('textbox', { name: 'Webhook Proxy URL' })

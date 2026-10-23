@@ -81,10 +81,12 @@ if (isProd) {
   cfg.plugins.push(new PurgeCSSPlugin({
     minimize: true,
     moduleExtensions: ['.js', '.jsx', '.ts', '.tsx'],
-    paths: glob([
-      join(__dirname, 'src', '**/*.{js,jsx,ts,tsx}'),
-      join(__dirname, 'public', '*.html')
-    ])
+    paths: [
+      ...glob(join(__dirname, 'src', '**/*.{js,jsx,ts,tsx}')),
+      // Required paths make incomplete production build contexts fail explicitly.
+      join(__dirname, 'public', 'index.html'),
+      join(__dirname, 'public', 'webhooks.html')
+    ]
   }))
 }
 
